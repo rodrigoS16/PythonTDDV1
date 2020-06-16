@@ -2,6 +2,7 @@ from collections import OrderedDict
 from unittest import TestCase
 
 from src.leilao.dominio import Usuario, Lance, Leilao
+from src.leilao.excessoes import LanceInvalido
 
 
 class TestLeilao(TestCase):
@@ -23,12 +24,12 @@ class TestLeilao(TestCase):
 
         cenarios = self.list_cenarios(must_createOnlyOne,cenarios_adicionais)
         cenarios.sort(key=lambda tup: tup[1], reverse=must_reverse)
-        self.leilao = Leilao("Celular")
+        self.leilao = Leilao('Celular')
 
         for key, value in cenarios:
-            usuario = Usuario(key)
-            lance = Lance(usuario, value)
-            self.leilao.adiciona_lance(lance)
+            usuario = Usuario(key, 500.0)
+            #lance = Lance(usuario, value)
+            usuario.propoe_lance(self.leilao, value)
 
     def test_deve_retornar_o_maior_e_o_menor_valor_de_um_lance_quando_adicionados_em_ordem_crescente(self):
         self.criaCenario()
@@ -39,7 +40,7 @@ class TestLeilao(TestCase):
         self.assertEqual(maior_valor_esperado, self.leilao.maior_lance)
 
     def test_deve_permitir_propor_lance_caso_o_lance_for_maior_q_anterior(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(LanceInvalido):
             self.criaCenario(True)
 
     def test_deve_retornar_o_mesmo_valor_para_maior_e_menor_lance_quando_leilao_tiver_um_lance(self):
@@ -76,12 +77,12 @@ class TestLeilao(TestCase):
             tuples = self.leilao.lances[len(self.leilao.lances)-1]
             self.leilao.adiciona_lance(Lance(usuario=tuples.usuario.nome, valor=300.0))
             self.fail(msg="Não lancou excessão")
-        except ValueError:
+        except LanceInvalido:
             quantidade_lances = len(self.leilao.lances)
             self.assertEqual(quantidade_lances_original, quantidade_lances)
 
     def test_deve_lancar_excessao_caso_nao_tenha_valueError(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(LanceInvalido):
             self.criaCenario()
             tuples = self.leilao.lances[-1]
             self.leilao.adiciona_lance(Lance(usuario=tuples.usuario.nome, valor=300.0))
